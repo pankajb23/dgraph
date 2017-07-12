@@ -126,9 +126,9 @@ func streamKeys(stream protos.Worker_PredicateAndSchemaDataClient, groupId uint3
 // writes it to RocksDB.
 func populateShard(ctx context.Context, pl *pool, group uint32) (int, error) {
 	conn := pl.Get()
-	c := protos.NewWorkerClient(conn)
+	client := protos.NewWorkerClient(conn)
 
-	stream, err := c.PredicateAndSchemaData(context.Background())
+	stream, err := client.PredicateAndSchemaData(context.Background())
 	if err != nil {
 		if tr, ok := trace.FromContext(ctx); ok {
 			tr.LazyPrintf(err.Error())
