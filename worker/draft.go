@@ -683,6 +683,7 @@ func (n *node) retrieveSnapshot(peerID uint64) {
 		log.Fatalf("Cannot retrieve snapshot from peer %v, no connection.  Error: %v\n",
 			peerID, err)
 	}
+	log.Printf("Retrieving snapshot (group %v) from peer %v\n", n.gid, peerID)
 	defer pools().release(pool)
 
 	// Get index of last committed.
@@ -704,6 +705,7 @@ func (n *node) retrieveSnapshot(peerID uint64) {
 	// Populate shard stores the streamed data directly into db, so we need to refresh
 	// schema for current group id
 	x.Checkf(schema.LoadFromDb(n.gid), "Error while initilizating schema")
+	log.Printf("Finished retrieving snapshot (group %v) from peer %v\n", n.gid, peerID)
 }
 
 func (n *node) Run() {
@@ -761,8 +763,14 @@ func (n *node) Run() {
 					tr.LazyPrintf("Found %d committed entries", len(rd.CommittedEntries))
 				}
 			}
+			log.Printf("CommittedEntries (group %v) size %v\n", n.gid,
+				len(rd.CommittedEntries))
 
-			for _, entry := range rd.CommittedEntries {
+			for i, entry := range rd.CommittedEntries {
+				if i%256 == 0 {
+					log.Printf("Committed entries (group %v) index %v",
+						n.gid, entry.Index)
+				}
 				// Need applied watermarks for schema mutation also for read linearazibility
 				// Applied watermarks needs to be emitted as soon as possible sequentially.
 				// If we emit Mark{4, false} and Mark{4, true} before emitting Mark{3, false}
