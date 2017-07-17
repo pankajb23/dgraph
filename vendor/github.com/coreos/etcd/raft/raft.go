@@ -732,6 +732,12 @@ func stepLeader(r *raft, m pb.Message) {
 					// update() reset the wait state on this node. If we had delayed sending
 					// an update before, send it now.
 					r.sendAppend(m.From)
+				} else {
+					// HACK: sendAppend in response to MsgAppResp. This is
+					// horrible because we ping-pong these, and add a new set
+					// of ping-pongs every heartbeat message, resulting in up
+					// to MaxInflight running ping-pong chains.
+					r.sendAppend(m.From)
 				}
 				// Transfer leadership is in progress.
 				if m.From == r.leadTransferee && pr.Match == r.raftLog.lastIndex() {
